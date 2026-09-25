@@ -15,7 +15,7 @@ still lags behind the vocabulary. Residents can name a pattern without knowing
 what it implies, how its modifiers change that, or how it connects to the
 decision in front of them.
 
-The standard teaching figure (`Screenshot 2026-09-25 at 1.26.03 PM.png`,
+The standard teaching figure (kept locally as `Screenshot 2026-09-25 at 1.26.03 PM.png`, not in the repo;
 combining Johnson & Kaplan 2017 and Rodriguez Ruiz et al. 2017) is widely shared
 and useful, but it's static. Residents tend to memorize its positions rather
 than build an understanding they can apply to a pattern it doesn't show.
