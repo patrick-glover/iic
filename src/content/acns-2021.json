@@ -1,0 +1,192 @@
+{
+  "source": {
+    "id": "hirsch2021",
+    "citation": "Hirsch LJ, Fong MWK, Leitinger M, et al. American Clinical Neurophysiology Society's Standardized Critical Care EEG Terminology: 2021 Version. J Clin Neurophysiol. 2021;38(1):1-29.",
+    "doi": "10.1097/WNP.0000000000000806",
+    "pmid": "33475321",
+    "pmcid": "PMC8135051",
+    "note": "Quotes are short excerpts of operative definitions, with figure and supplement cross-references omitted and the first letter capitalized. Consult the paper for figures, examples, and full notes."
+  },
+  "entries": [
+    {
+      "id": "prevalence",
+      "term": "Prevalence",
+      "section": "C3a",
+      "quote": "Continuous: ≥90% of record/epoch. Abundant: 50% to 89% of record/epoch. Frequent: 10% to 49% of record/epoch. Occasional: 1% to 9% of record/epoch. Rare: <1% of record/epoch."
+    },
+    {
+      "id": "duration",
+      "term": "Duration",
+      "section": "C3b",
+      "quote": "Very long: ≥1 hour. Long: 10 to 59 minutes. Intermediate duration: 1 to 9.9 minutes. Brief: 10 to 59 seconds. Very brief: <10 seconds."
+    },
+    {
+      "id": "rpp-min-cycles",
+      "term": "Minimum length of a rhythmic or periodic pattern",
+      "section": "C2",
+      "quote": "A pattern can qualify as rhythmic or periodic if and only if it continues for at least six consecutive cycles (e.g., 1 Hz for 6 seconds, or 3 Hz for 2 seconds)."
+    },
+    {
+      "id": "pd",
+      "term": "Periodic Discharges (PDs)",
+      "section": "C2",
+      "quote": "Repetition of a waveform with relatively uniform morphology and duration with a clearly discernible interdischarge interval between consecutive waveforms and recurrence of the waveform at nearly regular intervals."
+    },
+    {
+      "id": "rda",
+      "term": "Rhythmic Delta Activity (RDA)",
+      "section": "C2",
+      "quote": "RDA: Rhythmic activity 0.5 to ≤4.0 Hz."
+    },
+    {
+      "id": "sw",
+      "term": "Spike-and-wave or Sharp-and-wave (SW)",
+      "section": "C2",
+      "quote": "Spike, polyspike, or sharp wave consistently followed by a slow wave in a regularly repeating and alternating pattern (spike-wave-spike-wave-spike-wave), with a consistent relationship between the spike (or polyspike or sharp wave) component and the slow wave for at least six consecutive cycles and with no interval between one spike-wave complex and the next."
+    },
+    {
+      "id": "pd-sw-above-2.5",
+      "term": "PDs or SW above 2.5 Hz",
+      "section": "C3c",
+      "quote": "If PDs or SW have a typical frequency >2.5 Hz and are ≥10 seconds, these would qualify as electrographic seizures (criterion A) and should be referred to as such rather than as PDs or SW."
+    },
+    {
+      "id": "rpp-above-4",
+      "term": "Patterns above 4 Hz",
+      "section": "C3c",
+      "quote": "No RPP in this terminology can have a typical frequency of >4 Hz; if an RPP is >4 Hz and ≥0.5 seconds, it would always meet the criteria for either BIRDs (if <10 seconds) or electrographic seizure (if ≥10 seconds)."
+    },
+    {
+      "id": "evolving",
+      "term": "Evolving",
+      "section": "C3h",
+      "quote": "At least two unequivocal, sequential changes in frequency, morphology, or location defined as follows: Evolution in frequency is defined as at least two consecutive changes in the same direction by at least 0.5 Hz ... Evolution in morphology is defined as at least two consecutive changes to a novel morphology ... Evolution in location is defined as sequentially spreading into or sequentially out of at least two different standard 10-20 electrode locations. The two consecutive changes must be in the same category (frequency, morphology or location) to qualify."
+    },
+    {
+      "id": "evolving-min-cycles",
+      "term": "Evolution: minimum persistence",
+      "section": "C3h",
+      "quote": "To qualify as evolution in frequency, a single frequency must persist for at least three cycles (e.g., 1 Hz for 3 seconds, or 3 Hz for 1 second)."
+    },
+    {
+      "id": "evolving-5-min",
+      "term": "Evolution: five-minute rule",
+      "section": "C3h",
+      "quote": "The criteria for evolution must be reached without the evolving feature (frequency, morphology, or location) remaining unchanged for five or more continuous minutes."
+    },
+    {
+      "id": "evolving-voltage",
+      "term": "Evolution: voltage alone",
+      "section": "C3h",
+      "quote": "Evolution in voltage (amplitude) alone does not qualify as evolving and does not qualify as a different morphology."
+    },
+    {
+      "id": "fluctuating",
+      "term": "Fluctuating",
+      "section": "C3h",
+      "quote": "≥3 changes, not more than 1 minute apart, in frequency (by at least 0.5 Hz), morphology, or location (by at least 1 standard interelectrode distance), but not qualifying as evolving. ... To qualify as present, a single frequency, morphology, or location must persist at least three cycles (e.g., 1 Hz for 3 seconds, or 3 Hz for 1 second)."
+    },
+    {
+      "id": "static",
+      "term": "Static",
+      "section": "C3h",
+      "quote": "Not qualifying as evolving or fluctuating."
+    },
+    {
+      "id": "plus",
+      "term": "Plus (+)",
+      "section": "C3i",
+      "quote": "Additional feature which renders the pattern more ictal-appearing (i.e., more closely resembling an EEG pattern seen during seizures) than the usual term without the plus. This modifier applies only to PDs and RDA, not SW."
+    },
+    {
+      "id": "plus-f",
+      "term": "+F",
+      "section": "C3i",
+      "quote": "With superimposed (some prefer the synonyms of admixed or associated) fast activity, defined as theta or faster, whether rhythmic or not. \"+F\" can be applied to PDs or RDA."
+    },
+    {
+      "id": "plus-r",
+      "term": "+R",
+      "section": "C3i",
+      "quote": "With superimposed rhythmic or quasi-rhythmic delta activity; can be applied to PDs only."
+    },
+    {
+      "id": "plus-s",
+      "term": "+S",
+      "section": "C3i",
+      "quote": "With associated sharp waves or spikes, or sharply contoured; can be applied to RDA only. The sharp contour, sharp waves, or spikes need to occur at least once every 10 seconds but not as part of an SW pattern."
+    },
+    {
+      "id": "stimulus-induced",
+      "term": "Stimulus-Induced (SI-)",
+      "section": "C3g",
+      "quote": "Reproducibly brought about or exacerbated by an alerting stimulus, with or without clinical alerting, when a patient is in their less-stimulated state."
+    },
+    {
+      "id": "triphasic",
+      "term": "Triphasic morphology",
+      "section": "C4b",
+      "quote": "Three phases, negative-positive-negative, with each phase longer than the previous, and the second (positive) phase of highest voltage ... This modifier applies to PDs and SW, but not RDA."
+    },
+    {
+      "id": "esz",
+      "term": "Electrographic seizure (ESz)",
+      "section": "D1",
+      "quote": "Epileptiform discharges averaging >2.5 Hz for ≥10 seconds (>25 discharges in 10 seconds), OR Any pattern with definite evolution as defined above and lasting ≥10 seconds."
+    },
+    {
+      "id": "ese",
+      "term": "Electrographic status epilepticus (ESE)",
+      "section": "D2",
+      "quote": "ESE is defined as an ESz for ≥10 continuous minutes or for a total duration of ≥20% of any 60-minute period of recording."
+    },
+    {
+      "id": "ecsz",
+      "term": "Electroclinical seizure (ECSz)",
+      "section": "D3",
+      "quote": "Definite clinical correlate time-locked to the pattern (of any duration), OR EEG AND clinical improvement with a parenteral (typically IV) antiseizure medication."
+    },
+    {
+      "id": "possible-ecse",
+      "term": "Possible electroclinical status epilepticus",
+      "section": "D4b",
+      "quote": "Possible ECSE is an RPP that qualifies for the IIC that is present for ≥10 continuous minutes or for a total duration of ≥20% of any 60-minute period of recording, which shows EEG improvement with a parenteral antiseizure medication BUT without clinical improvement."
+    },
+    {
+      "id": "birds",
+      "term": "Brief Potentially Ictal Rhythmic Discharges (BIRDs)",
+      "section": "E",
+      "quote": "Focal (including L, BI, UI or Mf) or generalized rhythmic activity >4 Hz (at least six waves at a regular rate) lasting ≥0.5 to <10 seconds, not consistent with a known normal pattern or benign variant, not part of burst-suppression or burst-attenuation, without definite clinical correlate."
+    },
+    {
+      "id": "iic",
+      "term": "Ictal-interictal continuum (IIC)",
+      "section": "F",
+      "quote": "The IIC is a purely electrographic term that is not a diagnosis; it requires careful interpretation in the full clinical context."
+    },
+    {
+      "id": "iic-a",
+      "term": "IIC criterion: PDs or SW >1 to 2.5 Hz",
+      "section": "F",
+      "quote": "Any PD or SW pattern that averages >1.0 and ≤2.5 Hz over 10 seconds (>10 and ≤ 25 discharges in 10 seconds)."
+    },
+    {
+      "id": "iic-b",
+      "term": "IIC criterion: PDs or SW 0.5 to 1 Hz with plus or fluctuation",
+      "section": "F",
+      "quote": "Any PD or SW pattern that averages ≥0.5 Hz and ≤1.0 Hz over 10 seconds (≥5 and ≤10 discharges in 10 seconds) and has a plus modifier or fluctuation."
+    },
+    {
+      "id": "iic-c",
+      "term": "IIC criterion: lateralized RDA >1 Hz with plus or fluctuation",
+      "section": "F",
+      "quote": "Any lateralized RDA averaging >1 Hz for at least 10 seconds (at least 10 waves in 10 seconds) with a plus modifier or fluctuation. This includes any LRDA, BIRDA, UIRDA, and MfRDA, but not GRDA."
+    },
+    {
+      "id": "iic-not-seizure",
+      "term": "IIC excludes seizures",
+      "section": "F",
+      "quote": "AND Does not qualify as an ESz or ESE."
+    }
+  ]
+}
