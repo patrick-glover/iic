@@ -6,6 +6,7 @@
   import type { Location, PatternType } from './acns/types';
   import { toPattern, type Shape } from './builder';
   import { settings } from './state.svelte';
+  import Trace from './Trace.svelte';
 
   const pattern = $derived(toPattern(settings));
   const result = $derived(classify(pattern));
@@ -143,43 +144,47 @@
     </fieldset>
   </form>
 
-  <section class="result" aria-live="polite">
-    <p class="kicker">ACNS 2021 name</p>
-    <h2>{name}</h2>
-    <p class="badge {result.category}">{categoryLabel[result.category]}</p>
+  <div class="output">
+    <Trace {pattern} />
 
-    <h3>Why</h3>
-    <ul class="reasons">
-      {#each result.reasons as r}
-        {@const e = entry(r.ref)}
-        <li>
-          <p>{r.text}</p>
+    <section class="result" aria-live="polite">
+      <p class="kicker">ACNS 2021 name</p>
+      <h2>{name}</h2>
+      <p class="badge {result.category}">{categoryLabel[result.category]}</p>
+
+      <h3>Why</h3>
+      <ul class="reasons">
+        {#each result.reasons as r}
+          {@const e = entry(r.ref)}
+          <li>
+            <p>{r.text}</p>
+            {#if e}
+              <details>
+                <summary>ACNS 2021 §{e.section}: {e.term}</summary>
+                <blockquote>{e.quote}</blockquote>
+              </details>
+            {/if}
+          </li>
+        {/each}
+      </ul>
+
+      {#if result.possibleECSEIfTrialPositive}
+        {@const e = entry('possible-ecse')}
+        <aside>
+          <p>
+            <strong>Long enough to matter for a treatment trial.</strong> If an IV antiseizure medication improves the EEG but
+            not the patient, this becomes possible electroclinical status epilepticus.
+          </p>
           {#if e}
             <details>
               <summary>ACNS 2021 §{e.section}: {e.term}</summary>
               <blockquote>{e.quote}</blockquote>
             </details>
           {/if}
-        </li>
-      {/each}
-    </ul>
-
-    {#if result.possibleECSEIfTrialPositive}
-      {@const e = entry('possible-ecse')}
-      <aside>
-        <p>
-          <strong>Long enough to matter for a treatment trial.</strong> If an IV antiseizure medication improves the EEG but
-          not the patient, this becomes possible electroclinical status epilepticus.
-        </p>
-        {#if e}
-          <details>
-            <summary>ACNS 2021 §{e.section}: {e.term}</summary>
-            <blockquote>{e.quote}</blockquote>
-          </details>
-        {/if}
-      </aside>
-    {/if}
-  </section>
+        </aside>
+      {/if}
+    </section>
+  </div>
 </div>
 
 <style>
@@ -192,10 +197,12 @@
     .builder {
       grid-template-columns: minmax(0, 22rem) minmax(0, 1fr);
     }
-    .result {
+    .output {
       position: sticky;
-      top: 1.5rem;
+      top: 1rem;
       align-self: start;
+      max-height: calc(100vh - 2rem);
+      overflow-y: auto;
     }
   }
 
@@ -279,6 +286,11 @@
     accent-color: var(--fg);
   }
 
+  .output {
+    display: grid;
+    gap: 1rem;
+    min-width: 0;
+  }
   .result {
     background: var(--panel);
     border: 1px solid var(--line);
