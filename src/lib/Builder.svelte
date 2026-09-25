@@ -29,13 +29,22 @@
   const durations = [8, 15, 60, 300, 900, 3600];
 
   const categoryLabel: Record<Category, string> = {
-    ESE: 'Electrographic status epilepticus',
-    ESz: 'Electrographic seizure',
-    IIC: 'Ictal-interictal continuum',
-    RPP: 'Not on the IIC',
-    'not-rpp': 'Not a rhythmic or periodic pattern',
-    'birds-range': 'Assess as possible BIRDs',
+    ESE: 'Status epilepticus',
+    ESz: 'Seizure',
+    IIC: 'IIC',
+    RPP: 'Not IIC',
+    'not-rpp': 'Not rhythmic or periodic',
+    'birds-range': 'Possible BIRDs',
   };
+
+  // The deciding reasons, without the "and not a seizure" check every IIC carries.
+  const summary = $derived(
+    result.reasons
+      .filter((r) => r.ref !== 'iic-not-seizure')
+      .map((r) => r.text)
+      .join(' '),
+  );
+  let barHeight = $state(0);
 
   // Keep the settings valid for the chosen type: drop plus subtypes and
   // modifiers that don't apply, and hold RDA inside 0.5–4 Hz.
@@ -51,143 +60,173 @@
   }
 </script>
 
-<div class="builder">
-  <form class="controls" onsubmit={(e) => e.preventDefault()}>
-    <fieldset>
-      <legend>Location <span class="hint">main term 1</span></legend>
-      <div class="seg">
-        {#each locations as [value, label]}
-          <label title={label}><input type="radio" bind:group={settings.location} {value} /><span>{value}</span></label>
-        {/each}
-      </div>
-      <p class="sub">{locations.find(([v]) => v === settings.location)?.[1]}</p>
-    </fieldset>
-
-    <fieldset>
-      <legend>Type <span class="hint">main term 2</span></legend>
-      <div class="seg">
-        {#each types as [value, label]}
-          <label title={label}>
-            <input type="radio" bind:group={settings.type} {value} onchange={onTypeChange} /><span>{value === 'PD' ? 'PDs' : value}</span>
-          </label>
-        {/each}
-      </div>
-      <p class="sub">{types.find(([v]) => v === settings.type)?.[1]}</p>
-    </fieldset>
-
-    <fieldset>
-      <legend>Frequency <output>{settings.frequencyHz} Hz</output></legend>
-      <input
-        type="range"
-        min={settings.type === 'RDA' ? 0.5 : 0.25}
-        max="4"
-        step="0.25"
-        bind:value={settings.frequencyHz}
-        aria-label="Frequency in Hz"
-      />
-      {#if settings.shape === 'evolving'}<p class="sub">Starting frequency; evolution steps 0.5 Hz twice.</p>{/if}
-      {#if settings.shape === 'fluctuating'}<p class="sub">Alternates with a frequency 0.5 Hz away.</p>{/if}
-    </fieldset>
-
-    <fieldset>
-      <legend>Duration</legend>
-      <div class="seg">
-        {#each durations as value}
-          <label><input type="radio" bind:group={settings.durationSec} {value} /><span>{formatDuration(value)}</span></label>
-        {/each}
-      </div>
-    </fieldset>
-
-    <fieldset>
-      <legend>Over time</legend>
-      <div class="seg">
-        {#each shapes as value}
-          <label><input type="radio" bind:group={settings.shape} {value} /><span>{value}</span></label>
-        {/each}
-      </div>
-    </fieldset>
-
-    <fieldset>
-      <legend>Plus <span class="hint">more ictal-appearing</span></legend>
-      <div class="checks">
-        <label class:off={settings.type === 'SW'}>
-          <input type="checkbox" bind:checked={settings.plus.F} disabled={settings.type === 'SW'} />
-          +F <span class="hint">fast activity · PDs, RDA</span>
-        </label>
-        <label class:off={settings.type !== 'PD'}>
-          <input type="checkbox" bind:checked={settings.plus.R} disabled={settings.type !== 'PD'} />
-          +R <span class="hint">rhythmic delta · PDs only</span>
-        </label>
-        <label class:off={settings.type !== 'RDA'}>
-          <input type="checkbox" bind:checked={settings.plus.S} disabled={settings.type !== 'RDA'} />
-          +S <span class="hint">sharp waves or spikes · RDA only</span>
-        </label>
-      </div>
-      {#if settings.type === 'SW'}<p class="sub">Plus modifiers do not apply to SW.</p>{/if}
-    </fieldset>
-
-    <fieldset>
-      <legend>Prevalence <output>{settings.prevalencePct}% · {prevalenceCategory(settings.prevalencePct)}</output></legend>
-      <input type="range" min="0" max="100" step="1" bind:value={settings.prevalencePct} aria-label="Prevalence percent" />
-      <p class="sub">Share of the hour the pattern is present.</p>
-    </fieldset>
-
-    <fieldset>
-      <legend>Other modifiers</legend>
-      <div class="checks">
-        <label><input type="checkbox" bind:checked={settings.stimulusInduced} /> Stimulus-induced (SI-)</label>
-        <label class:off={settings.type === 'RDA'}>
-          <input type="checkbox" bind:checked={settings.triphasic} disabled={settings.type === 'RDA'} />
-          Triphasic morphology <span class="hint">PDs, SW</span>
-        </label>
-      </div>
-    </fieldset>
-  </form>
-
-  <div class="output">
-    <Trace {pattern} />
-
-    <section class="result" aria-live="polite">
-      <p class="kicker">ACNS 2021 name</p>
+<div class="page" style:--bar-height="{barHeight}px">
+  <section class="bar" aria-live="polite" bind:clientHeight={barHeight}>
+    <p class="badge {result.category}">{categoryLabel[result.category]}</p>
+    <div class="bar-text">
+      <p class="kicker">Official ACNS 2021 name</p>
       <h2>{name}</h2>
-      <p class="badge {result.category}">{categoryLabel[result.category]}</p>
+      <p class="why">{summary}</p>
+    </div>
+  </section>
 
-      <h3>Why</h3>
-      <ul class="reasons">
-        {#each result.reasons as r}
-          {@const e = entry(r.ref)}
-          <li>
-            <p>{r.text}</p>
+  <div class="builder">
+    <form class="controls" onsubmit={(e) => e.preventDefault()}>
+      <fieldset>
+        <legend>Location <span class="hint">main term 1</span></legend>
+        <div class="seg">
+          {#each locations as [value, label]}
+            <label title={label}><input type="radio" bind:group={settings.location} {value} /><span>{value}</span></label>
+          {/each}
+        </div>
+        <p class="sub">{locations.find(([v]) => v === settings.location)?.[1]}</p>
+      </fieldset>
+
+      <fieldset>
+        <legend>Type <span class="hint">main term 2</span></legend>
+        <div class="seg">
+          {#each types as [value, label]}
+            <label title={label}>
+              <input type="radio" bind:group={settings.type} {value} onchange={onTypeChange} /><span>{value === 'PD' ? 'PDs' : value}</span>
+            </label>
+          {/each}
+        </div>
+        <p class="sub">{types.find(([v]) => v === settings.type)?.[1]}</p>
+      </fieldset>
+
+      <fieldset>
+        <legend>Frequency <output>{settings.frequencyHz} Hz</output></legend>
+        <input
+          type="range"
+          min={settings.type === 'RDA' ? 0.5 : 0.25}
+          max="4"
+          step="0.25"
+          bind:value={settings.frequencyHz}
+          aria-label="Frequency in Hz"
+        />
+        {#if settings.shape === 'evolving'}<p class="sub">Starting frequency; evolution steps 0.5 Hz twice.</p>{/if}
+        {#if settings.shape === 'fluctuating'}<p class="sub">Alternates with a frequency 0.5 Hz away.</p>{/if}
+      </fieldset>
+
+      <fieldset>
+        <legend>Duration</legend>
+        <div class="seg">
+          {#each durations as value}
+            <label><input type="radio" bind:group={settings.durationSec} {value} /><span>{formatDuration(value)}</span></label>
+          {/each}
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Over time</legend>
+        <div class="seg">
+          {#each shapes as value}
+            <label><input type="radio" bind:group={settings.shape} {value} /><span>{value}</span></label>
+          {/each}
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Plus <span class="hint">more ictal-appearing</span></legend>
+        <div class="checks">
+          <label class:off={settings.type === 'SW'}>
+            <input type="checkbox" bind:checked={settings.plus.F} disabled={settings.type === 'SW'} />
+            +F <span class="hint">fast activity · PDs, RDA</span>
+          </label>
+          <label class:off={settings.type !== 'PD'}>
+            <input type="checkbox" bind:checked={settings.plus.R} disabled={settings.type !== 'PD'} />
+            +R <span class="hint">rhythmic delta · PDs only</span>
+          </label>
+          <label class:off={settings.type !== 'RDA'}>
+            <input type="checkbox" bind:checked={settings.plus.S} disabled={settings.type !== 'RDA'} />
+            +S <span class="hint">sharp waves or spikes · RDA only</span>
+          </label>
+        </div>
+        {#if settings.type === 'SW'}<p class="sub">Plus modifiers do not apply to SW.</p>{/if}
+      </fieldset>
+
+      <fieldset>
+        <legend>Prevalence <output>{settings.prevalencePct}% · {prevalenceCategory(settings.prevalencePct)}</output></legend>
+        <input type="range" min="0" max="100" step="1" bind:value={settings.prevalencePct} aria-label="Prevalence percent" />
+        <p class="sub">Share of the hour the pattern is present.</p>
+      </fieldset>
+
+      <fieldset>
+        <legend>Other modifiers</legend>
+        <div class="checks">
+          <label><input type="checkbox" bind:checked={settings.stimulusInduced} /> Stimulus-induced (SI-)</label>
+          <label class:off={settings.type === 'RDA'}>
+            <input type="checkbox" bind:checked={settings.triphasic} disabled={settings.type === 'RDA'} />
+            Triphasic morphology <span class="hint">PDs, SW</span>
+          </label>
+        </div>
+      </fieldset>
+    </form>
+
+    <div class="output">
+      <Trace {pattern} />
+
+      <section class="result">
+        <h3>Why, by ACNS 2021</h3>
+        <ul class="reasons">
+          {#each result.reasons as r}
+            {@const e = entry(r.ref)}
+            <li>
+              <p>{r.text}</p>
+              {#if e}
+                <figure>
+                  <blockquote>{e.quote}</blockquote>
+                  <figcaption>ACNS 2021 §{e.section}: {e.term}</figcaption>
+                </figure>
+              {/if}
+            </li>
+          {/each}
+        </ul>
+
+        {#if result.possibleECSEIfTrialPositive}
+          {@const e = entry('possible-ecse')}
+          <aside>
+            <p>
+              <strong>Long enough to matter for a treatment trial.</strong> If an IV antiseizure medication improves the EEG but
+              not the patient, this becomes possible electroclinical status epilepticus.
+            </p>
             {#if e}
-              <details>
-                <summary>ACNS 2021 §{e.section}: {e.term}</summary>
+              <figure>
                 <blockquote>{e.quote}</blockquote>
-              </details>
+                <figcaption>ACNS 2021 §{e.section}: {e.term}</figcaption>
+              </figure>
             {/if}
-          </li>
-        {/each}
-      </ul>
-
-      {#if result.possibleECSEIfTrialPositive}
-        {@const e = entry('possible-ecse')}
-        <aside>
-          <p>
-            <strong>Long enough to matter for a treatment trial.</strong> If an IV antiseizure medication improves the EEG but
-            not the patient, this becomes possible electroclinical status epilepticus.
-          </p>
-          {#if e}
-            <details>
-              <summary>ACNS 2021 §{e.section}: {e.term}</summary>
-              <blockquote>{e.quote}</blockquote>
-            </details>
-          {/if}
-        </aside>
-      {/if}
-    </section>
+          </aside>
+        {/if}
+      </section>
+    </div>
   </div>
 </div>
 
 <style>
+  .bar {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    margin: 0 0 1.5rem;
+    padding: 0.75rem 0;
+    background: var(--bg);
+    border-bottom: 1px solid var(--line);
+  }
+  .bar-text {
+    min-width: 0;
+  }
+  .bar h2 {
+    margin: 0.1rem 0 0.15rem;
+  }
+  .why {
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
   .builder {
     display: grid;
     gap: 2rem;
@@ -199,9 +238,9 @@
     }
     .output {
       position: sticky;
-      top: 1rem;
+      top: calc(var(--bar-height) + 1rem);
       align-self: start;
-      max-height: calc(100vh - 2rem);
+      max-height: calc(100vh - var(--bar-height) - 4rem);
       overflow-y: auto;
     }
   }
@@ -310,11 +349,12 @@
     margin: 0.3rem 0 0.75rem;
   }
   .badge {
-    display: inline-block;
-    padding: 0.3rem 0.7rem;
-    border-radius: 999px;
-    font-weight: 600;
-    font-size: 0.9rem;
+    flex: 0 0 auto;
+    padding: 0.55rem 1rem;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 1.05rem;
+    white-space: nowrap;
     margin: 0;
     background: var(--tint-none);
   }
@@ -329,7 +369,7 @@
   }
   h3 {
     font-size: 0.95rem;
-    margin: 1.5rem 0 0.5rem;
+    margin: 0 0 0.5rem;
   }
   .reasons {
     list-style: none;
@@ -341,18 +381,18 @@
   .reasons p {
     margin: 0;
   }
-  details {
-    margin-top: 0.25rem;
-    font-size: 0.85rem;
-  }
-  summary {
-    color: var(--muted);
-    cursor: pointer;
-  }
-  blockquote {
-    margin: 0.4rem 0 0;
+  figure {
+    margin: 0.35rem 0 0;
     padding-left: 0.75rem;
     border-left: 3px solid var(--line);
+    font-size: 0.85rem;
+  }
+  blockquote {
+    margin: 0;
+  }
+  figcaption {
+    color: var(--muted);
+    margin-top: 0.15rem;
   }
   aside {
     margin-top: 1.5rem;

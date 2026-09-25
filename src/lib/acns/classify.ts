@@ -125,7 +125,7 @@ export function classify(p: Pattern): Classification {
 }
 
 function whyNotIIC(p: Pattern, hz: number, plusOrFluct: boolean): string {
-  if (p.type === 'RDA' && p.location === 'G') return 'GRDA is not on the IIC at any frequency unless it becomes a seizure.';
+  if (p.type === 'RDA' && p.location === 'G') return 'GRDA is not on the IIC at any frequency; only evolution lasting ≥10 s makes it a seizure.';
   if (p.type === 'RDA' && hz <= 1) return `Lateralized RDA at ${fmt(hz)} Hz; the IIC needs >1 Hz with plus or fluctuation.`;
   if (p.type === 'RDA') return `Lateralized RDA at ${fmt(hz)} Hz without plus or fluctuation.`;
   if (hz < 0.5) return `${typeName(p)} at ${fmt(hz)} Hz, below the 0.5 Hz floor of the IIC.`;
