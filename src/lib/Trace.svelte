@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { Pattern } from './acns/types';
-  import { formatDuration } from './acns/timing';
+  import { formatDuration, prevalenceCategory, totalDuration } from './acns/timing';
+  import { runsInHour } from './builder';
   import { LEAD_SEC, recordDuration, segmentMarks, synthesize } from './eeg/synth';
 
   let { pattern }: { pattern: Pattern } = $props();
@@ -69,6 +70,15 @@
     return d;
   });
 
+  // The hour: where runs of this pattern fall, given its prevalence.
+  const runs = $derived(runsInHour({ durationSec: totalDuration(pattern.segments), prevalencePct: pattern.prevalencePct }));
+  const hourPct = $derived(Math.round((runs.reduce((t, r) => t + r.durationSec, 0) / 3600) * 100));
+  const hourX = (sec: number) => (sec / 3600) * 1000;
+  const runText = $derived(
+    `${runs.length} run${runs.length === 1 ? '' : 's'} of ${formatDuration(runs[0].durationSec)}` +
+      ` · ${hourPct < 1 ? '<1' : hourPct}% of the hour, ${prevalenceCategory(pattern.prevalencePct)}`,
+  );
+
   function jumpTo(e: MouseEvent) {
     const box = (e.currentTarget as HTMLElement).getBoundingClientRect();
     const t = ((e.clientX - box.left) / box.width) * total;
@@ -95,7 +105,7 @@
   <header>
     <div>
       <p class="kicker">Synthetic EEG</p>
-      <p class="montage">Longitudinal bipolar · <span class="schematic">schematic, not recorded</span></p>
+      <p class="montage">Longitudinal bipolar</p>
     </div>
     <div class="nav">
       <div class="seg" role="radiogroup" aria-label="Page length">
@@ -154,7 +164,21 @@
   <p class="foot">Gridlines 1 s. Shaded: background before and after the pattern. Voltages are relative, not to scale.</p>
 
   <div class="map">
-    <p class="kicker">Frequency over the whole pattern · {formatDuration(total - 2 * LEAD_SEC)}</p>
+    <p class="kicker">Across the hour · {runText}</p>
+    <div class="hour">
+      <svg viewBox="0 0 1000 28" preserveAspectRatio="none" aria-hidden="true">
+        {#each runs as r, i}
+          <rect class="run" class:first={i === 0} x={hourX(r.startSec)} y="4" width={Math.max(1.5, hourX(r.durationSec))} height="20" />
+        {/each}
+      </svg>
+      <div class="ticks">
+        {#each [0, 15, 30, 45, 60] as m}<span>{m} min</span>{/each}
+      </div>
+    </div>
+  </div>
+
+  <div class="map">
+    <p class="kicker">Frequency across one run · {formatDuration(total - 2 * LEAD_SEC)}</p>
     <!-- svelte-ignore a11y_click_events_have_key_events -->
     <div class="map-box" onclick={jumpTo} role="presentation">
       <svg viewBox="0 0 1000 {MAP_H}" preserveAspectRatio="none" style:height="{MAP_H}px" aria-hidden="true">
@@ -195,10 +219,6 @@
   .montage {
     margin: 0.15rem 0 0;
     font-weight: 600;
-  }
-  .schematic {
-    font-weight: 500;
-    color: var(--accent);
   }
   .nav {
     display: flex;
@@ -330,6 +350,29 @@
 
   .map {
     margin-top: 1rem;
+  }
+  .hour {
+    margin-top: 0.3rem;
+  }
+  .hour svg {
+    height: 28px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: var(--panel);
+  }
+  .run {
+    fill: var(--accent);
+    opacity: 0.45;
+  }
+  .run.first {
+    opacity: 1;
+  }
+  .ticks {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.65rem;
+    color: var(--muted);
+    margin-top: 0.15rem;
   }
   .map-box {
     position: relative;

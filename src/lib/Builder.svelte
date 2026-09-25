@@ -4,7 +4,7 @@
   import { reportedTerm } from './acns/term';
   import { formatDuration, prevalenceCategory } from './acns/timing';
   import type { Location, PatternType } from './acns/types';
-  import { toPattern, type Shape } from './builder';
+  import { minPrevalencePct, toPattern, type Shape } from './builder';
   import { settings } from './state.svelte';
   import Trace from './Trace.svelte';
 
@@ -45,6 +45,11 @@
       .join(' '),
   );
   let barHeight = $state(0);
+
+  // One run is already this share of the hour, so prevalence can't go lower.
+  function onDurationChange() {
+    settings.prevalencePct = Math.max(settings.prevalencePct, minPrevalencePct(settings.durationSec));
+  }
 
   // Keep the settings valid for the chosen type: drop plus subtypes and
   // modifiers that don't apply, and hold RDA inside 0.5–4 Hz.
@@ -112,7 +117,7 @@
         <legend>Duration</legend>
         <div class="seg">
           {#each durations as value}
-            <label><input type="radio" bind:group={settings.durationSec} {value} /><span>{formatDuration(value)}</span></label>
+            <label><input type="radio" bind:group={settings.durationSec} {value} onchange={onDurationChange} /><span>{formatDuration(value)}</span></label>
           {/each}
         </div>
       </fieldset>
@@ -147,8 +152,19 @@
 
       <fieldset>
         <legend>Prevalence <output>{settings.prevalencePct}% · {prevalenceCategory(settings.prevalencePct)}</output></legend>
-        <input type="range" min="0" max="100" step="1" bind:value={settings.prevalencePct} aria-label="Prevalence percent" />
-        <p class="sub">Share of the hour the pattern is present.</p>
+        <input
+          type="range"
+          min={minPrevalencePct(settings.durationSec)}
+          max="100"
+          step="1"
+          bind:value={settings.prevalencePct}
+          aria-label="Prevalence percent"
+        />
+        <p class="sub">
+          Share of the hour the pattern is present.
+          {#if minPrevalencePct(settings.durationSec) > 0}At least {minPrevalencePct(settings.durationSec)}%, since one
+            {formatDuration(settings.durationSec)} run is already that much.{/if}
+        </p>
       </fieldset>
 
       <fieldset>

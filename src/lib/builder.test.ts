@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { classify } from './acns/classify';
 import { dynamics } from './acns/dynamics';
 import { totalDuration } from './acns/timing';
-import { defaultSettings, toPattern, toSegments, type Shape } from './builder';
+import { defaultSettings, minPrevalencePct, runsInHour, toPattern, toSegments, type Shape } from './builder';
 
 describe('builder segments', () => {
   const shapes: Shape[] = ['static', 'fluctuating', 'evolving'];
@@ -32,5 +32,34 @@ describe('builder segments', () => {
     const lrda = { ...defaultSettings, type: 'RDA' as const, frequencyHz: 1 };
     expect(classify(toPattern({ ...lrda, shape: 'evolving' })).category).toBe('ESz');
     expect(classify(toPattern({ ...lrda, shape: 'static' })).category).toBe('RPP');
+  });
+});
+
+describe('prevalence and runs', () => {
+  it('a single run sets the prevalence floor', () => {
+    expect(minPrevalencePct(3600)).toBe(100);
+    expect(minPrevalencePct(900)).toBe(25);
+    expect(minPrevalencePct(60)).toBe(2);
+    expect(minPrevalencePct(15)).toBe(0);
+  });
+
+  // Whole runs only, so the total lands within half a run of the prevalence.
+  it('lays out runs that add up to the prevalence and fit in the hour', () => {
+    for (const durationSec of [8, 15, 60, 300, 900, 3600])
+      for (let prevalencePct = minPrevalencePct(durationSec); prevalencePct <= 100; prevalencePct += 7) {
+        const runs = runsInHour({ durationSec, prevalencePct });
+        const total = runs.reduce((t, r) => t + r.durationSec, 0);
+        const target = Math.max((prevalencePct / 100) * 3600, durationSec);
+        expect(Math.abs(total - target), `${durationSec} s at ${prevalencePct}%`).toBeLessThanOrEqual(durationSec / 2 + 1e-9);
+        for (let i = 0; i < runs.length; i++) {
+          expect(runs[i].startSec).toBeGreaterThanOrEqual(0);
+          expect(runs[i].startSec + runs[i].durationSec).toBeLessThanOrEqual(3600 + 1e-9);
+          if (i) expect(runs[i].startSec).toBeGreaterThanOrEqual(runs[i - 1].startSec + runs[i - 1].durationSec - 1e-9);
+        }
+      }
+  });
+
+  it('5% of the hour in 1-minute runs is three runs', () => {
+    expect(runsInHour({ durationSec: 60, prevalencePct: 5 })).toHaveLength(3);
   });
 });
