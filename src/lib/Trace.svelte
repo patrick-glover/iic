@@ -4,7 +4,8 @@
   import { runsInHour } from './builder';
   import { LEAD_SEC, recordDuration, segmentMarks, synthesize } from './eeg/synth';
 
-  let { pattern }: { pattern: Pattern } = $props();
+  /** blind hides what gives the answer away: frequency labels, change marks, and the durations and percentages. */
+  let { pattern, blind = false }: { pattern: Pattern; blind?: boolean } = $props();
 
   const pageLengths = [10, 20, 30];
   let pageSec = $state(20);
@@ -95,9 +96,8 @@
   };
 
   const summary = $derived(
-    `Schematic longitudinal bipolar EEG, ${clock(start)} to ${clock(end)} from pattern onset. ` +
-      marks.map((m) => `${m.frequencyHz} Hz from ${clock(m.t)}`).join(', ') +
-      '.',
+    `Schematic longitudinal bipolar EEG, ${clock(start)} to ${clock(end)} from pattern onset` +
+      (blind ? '.' : '. ' + marks.map((m) => `${m.frequencyHz} Hz from ${clock(m.t)}`).join(', ') + '.'),
   );
 </script>
 
@@ -136,7 +136,7 @@
         {#if end > offset}
           <rect class="lead" x={xOf(offset)} y="0" width={xOf(end) - xOf(offset)} {height} />
         {/if}
-        {#each marks as m, i}
+        {#each blind ? [] : marks as m, i}
           {#if i > 0 && inView(m.t)}
             <line class="change" x1={xOf(m.t)} x2={xOf(m.t)} y1="0" y2={height} />
           {/if}
@@ -147,15 +147,15 @@
       </svg>
       <div class="overlay">
         {#if inView(onset)}
-          <span class="tag" style:left={pct(onset)}><span class="edge">onset</span> {marks[0]?.frequencyHz} Hz</span>
+          <span class="tag" style:left={pct(onset)}><span class="edge">onset</span>{#if !blind}&nbsp;{marks[0]?.frequencyHz} Hz{/if}</span>
         {/if}
         {#if inView(offset)}<span class="tag edge" style:left={pct(offset)}>end</span>{/if}
-        {#each marks as m, i}
+        {#each blind ? [] : marks as m, i}
           {#if i > 0 && inView(m.t)}
             <span class="tag" style:left={pct(m.t)}>{m.frequencyHz} Hz</span>
           {/if}
         {/each}
-        {#if marks.length && !inView(onset) && start > onset && start < offset}
+        {#if !blind && marks.length && !inView(onset) && start > onset && start < offset}
           <span class="tag" style:left="0">{[...marks].reverse().find((m) => m.t <= start)?.frequencyHz} Hz</span>
         {/if}
       </div>
@@ -164,7 +164,7 @@
   <p class="foot">Gridlines 1 s. Shaded: background before and after the pattern. Voltages are relative, not to scale.</p>
 
   <div class="map">
-    <p class="kicker">Across the hour · {runText}</p>
+    <p class="kicker">Across the hour{#if !blind}&nbsp;· {runText}{/if}</p>
     <div class="hour">
       <svg viewBox="0 0 1000 28" preserveAspectRatio="none" aria-hidden="true">
         {#each runs as r, i}
@@ -178,19 +178,25 @@
   </div>
 
   <div class="map">
-    <p class="kicker">Frequency across one run · {formatDuration(total - 2 * LEAD_SEC)}</p>
+    <p class="kicker">{#if blind}One run{:else}Frequency across one run · {formatDuration(total - 2 * LEAD_SEC)}{/if}</p>
     <!-- svelte-ignore a11y_click_events_have_key_events -->
     <div class="map-box" onclick={jumpTo} role="presentation">
       <svg viewBox="0 0 1000 {MAP_H}" preserveAspectRatio="none" style:height="{MAP_H}px" aria-hidden="true">
-        <line class="thresh" x1="0" x2="1000" y1={mapY(1)} y2={mapY(1)} />
-        <line class="thresh" x1="0" x2="1000" y1={mapY(2.5)} y2={mapY(2.5)} />
+        {#if !blind}
+          <line class="thresh" x1="0" x2="1000" y1={mapY(1)} y2={mapY(1)} />
+          <line class="thresh" x1="0" x2="1000" y1={mapY(2.5)} y2={mapY(2.5)} />
+        {/if}
         <rect class="window" x={mapX(start)} y="1" width={Math.max(2, mapX(end) - mapX(start))} height={MAP_H - 2} />
-        <path d={mapPath} />
+        {#if !blind}<path d={mapPath} />{/if}
       </svg>
-      <span class="axis" style:top="{mapY(2.5)}px">2.5 Hz</span>
-      <span class="axis" style:top="{mapY(1)}px">1 Hz</span>
+      {#if !blind}
+        <span class="axis" style:top="{mapY(2.5)}px">2.5 Hz</span>
+        <span class="axis" style:top="{mapY(1)}px">1 Hz</span>
+      {/if}
     </div>
-    <p class="foot">Click to jump. Lines mark the ACNS 1 Hz and 2.5 Hz frequency cutoffs.</p>
+    <p class="foot">
+      {#if blind}Click to jump through the run.{:else}Click to jump. Lines mark the ACNS 1 Hz and 2.5 Hz frequency cutoffs.{/if}
+    </p>
   </div>
 </section>
 
