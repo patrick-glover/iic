@@ -10,7 +10,7 @@ import { dynamics, type Dynamic } from './acns/dynamics';
 import { effectivePlus } from './acns/term';
 import { durationCategory, prevalenceCategory, totalDuration, type DurationCategory } from './acns/timing';
 import type { Location, Pattern, PatternType, Plus, Prevalence } from './acns/types';
-import { runsInHour, toPattern, type BuilderSettings, type Shape } from './builder';
+import { toPattern, type BuilderSettings, type Shape } from './builder';
 
 /** The categories a quiz pattern can land in. */
 export type QuizCategory = Extract<Category, 'ESE' | 'ESz' | 'IIC' | 'RPP'>;
@@ -56,6 +56,29 @@ const PREVALENCE_BANDS: [number, number][] = [
 const CATEGORIES: QuizCategory[] = ['ESE', 'ESz', 'IIC', 'RPP'];
 
 /**
+ * Shortest gap that still reads as separate runs: 10 s, or a quarter of the
+ * run. Anything tighter a reader would call one long run, so "continuous" only
+ * comes with the hour-long run.
+ */
+export const minGapSec = (durationSec: number) => Math.max(10, durationSec / 4);
+
+/**
+ * Prevalence as the hour strip shows it, whole runs spread evenly, so the
+ * resident can read the category off the strip. The band is drawn first so
+ * rare and occasional turn up as often as the rest.
+ */
+function randomPrevalence(durationSec: number, rng: Rng): number {
+  if (durationSec >= 3600) return 100;
+  const maxRuns = Math.floor(3600 / (durationSec + minGapSec(durationSec)));
+  const maxPct = (100 * maxRuns * durationSec) / 3600;
+  const bands = PREVALENCE_BANDS.filter(([lo]) => lo < maxPct);
+  const [lo, hi] = pick(bands, rng);
+  const target = lo + rng() * (Math.min(hi, maxPct) - lo);
+  const runs = Math.max(1, Math.min(maxRuns, Math.round((target / 100) * 3600 / durationSec)));
+  return (100 * runs * durationSec) / 3600;
+}
+
+/**
  * A random pattern the builder could make. Stimulus-induced is left off: the
  * trace has no stimulus marker, so it can't be read from the EEG.
  */
@@ -63,11 +86,7 @@ export function randomSettings(rng: Rng = Math.random): BuilderSettings {
   const type = pick(TYPES, rng);
   const minHz = type === 'RDA' ? 0.5 : 0.25;
   const durationSec = pick(DURATIONS, rng);
-  const [lo, hi] = pick(PREVALENCE_BANDS, rng);
-  // Prevalence is what the hour strip shows, whole runs and all, so the
-  // resident can read the right category off it.
-  const runs = runsInHour({ durationSec, prevalencePct: lo + rng() * (hi - lo) });
-  const prevalencePct = (runs.reduce((t, r) => t + r.durationSec, 0) / 3600) * 100;
+  const prevalencePct = randomPrevalence(durationSec, rng);
   return {
     location: pick(LOCATIONS, rng),
     type,

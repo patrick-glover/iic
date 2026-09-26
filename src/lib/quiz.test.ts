@@ -3,7 +3,7 @@ import { classify } from './acns/classify';
 import { fullTerm, validate } from './acns/term';
 import { durationCategory, prevalenceCategory, totalDuration } from './acns/timing';
 import { runsInHour } from './builder';
-import { blankAnswer, grade, randomPattern, type Answer } from './quiz';
+import { blankAnswer, grade, minGapSec, randomPattern, type Answer } from './quiz';
 
 /** Seeded so failures reproduce. */
 function mulberry32(seed: number) {
@@ -37,6 +37,16 @@ describe('quiz patterns', () => {
       const d = p.segments.reduce((t, s) => t + s.durationSec, 0);
       const shown = (runsInHour({ durationSec: d, prevalencePct: p.prevalencePct }).reduce((t, r) => t + r.durationSec, 0) / 3600) * 100;
       expect(prevalenceCategory(shown)).toBe(prevalenceCategory(p.prevalencePct));
+    }
+  });
+
+  it('space runs far enough apart to read as separate runs', () => {
+    for (const p of patterns) {
+      const d = p.segments.reduce((t, s) => t + s.durationSec, 0);
+      const runs = runsInHour({ durationSec: d, prevalencePct: p.prevalencePct });
+      if (d >= 3600) continue;
+      expect(3600 / runs.length - d, fullTerm(p)).toBeGreaterThanOrEqual(minGapSec(d) - 1e-9);
+      if (prevalenceCategory(p.prevalencePct) === 'continuous') expect.fail(`continuous with ${d} s runs: ${fullTerm(p)}`);
     }
   });
 });
