@@ -65,7 +65,7 @@ describe('grading', () => {
 
   it('marks a blank answer wrong on every categorical field', () => {
     const wrong = grade(p, blankAnswer()).filter((m) => !m.correct).map((m) => m.label);
-    for (const label of ['Prevalence', 'Location', 'Type', 'Duration', 'Over time', 'Classification']) expect(wrong).toContain(label);
+    for (const label of ['Prevalence', 'Location', 'Pattern', 'Duration', 'Over time', 'Classification']) expect(wrong).toContain(label);
   });
 
   it('accepts a frequency within a quarter hertz of the range, not beyond', () => {

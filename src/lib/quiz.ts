@@ -129,7 +129,7 @@ export function grade(p: Pattern, a: Answer): Mark[] {
   return [
     { label: 'Prevalence', given: or(a.prevalence), truth: prevalence, correct: a.prevalence === prevalence },
     { label: 'Location', given: or(a.location), truth: p.location, correct: a.location === p.location },
-    { label: 'Type', given: typeText(a.type), truth: typeText(p.type), correct: a.type === p.type },
+    { label: 'Pattern', given: typeText(a.type), truth: typeText(p.type), correct: a.type === p.type },
     {
       label: 'Plus',
       given: plusText(a.plus),

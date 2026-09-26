@@ -10,6 +10,10 @@
   --on-iic: #5c3d00;
   --tint-seizure: #f7d4cc;
   --on-seizure: #7a1d0c;
+  --tint-right: #dcefd6;
+  --on-right: #1e5516;
+  --tint-wrong: #f9dcd5;
+  --on-wrong: #86200e;
   color-scheme: light;
   font-family: system-ui, -apple-system, sans-serif;
   line-height: 1.45;
@@ -171,4 +175,17 @@ main { max-width: 80rem; margin: 0 auto; padding: 0.5rem 1rem 3rem; }
 .controls input[type='range'] {
   width: 100%;
   accent-color: var(--fg);
+}
+@media (max-width: 600px) {
+  .bar {
+    flex-wrap: wrap;
+    gap: 0.4rem 0.75rem;
+  }
+  .bar h2 {
+    font-size: 1.1rem;
+  }
+  .badge {
+    padding: 0.3rem 0.7rem;
+    font-size: 0.9rem;
+  }
 }
