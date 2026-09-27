@@ -3,7 +3,7 @@
   import Quiz from './lib/Quiz.svelte';
 
   // The mode lives in the URL hash so a quiz link opens straight into the quiz.
-  const fromHash = () => location.hash === '#quiz';
+  const fromHash = () => /^#quiz(\/|$)/.test(location.hash);
   let quiz = $state(fromHash());
 
   function setQuiz(on: boolean) {

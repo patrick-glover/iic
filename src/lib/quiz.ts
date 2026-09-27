@@ -11,6 +11,7 @@ import { effectivePlus } from './acns/term';
 import { durationCategory, prevalenceCategory, totalDuration, type DurationCategory } from './acns/timing';
 import type { Location, Pattern, PatternType, Plus, Prevalence } from './acns/types';
 import { toPattern, type BuilderSettings, type Shape } from './builder';
+import { mulberry32 } from './seed';
 
 /** The categories a quiz pattern can land in. */
 export type QuizCategory = Extract<Category, 'ESE' | 'ESz' | 'IIC' | 'RPP'>;
@@ -114,6 +115,9 @@ export function randomPattern(rng: Rng = Math.random): Pattern {
   }
   return p;
 }
+
+/** The pattern a quiz seed names; the same seed always gives the same pattern. */
+export const patternFromSeed = (seed: number): Pattern => randomPattern(mulberry32(seed));
 
 export interface Mark {
   label: string;

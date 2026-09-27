@@ -3,17 +3,8 @@ import { classify } from './acns/classify';
 import { fullTerm, validate } from './acns/term';
 import { durationCategory, prevalenceCategory, totalDuration } from './acns/timing';
 import { runsInHour } from './builder';
-import { blankAnswer, grade, minGapSec, randomPattern, type Answer } from './quiz';
-
-/** Seeded so failures reproduce. */
-function mulberry32(seed: number) {
-  return () => {
-    seed = (seed + 0x6d2b79f5) | 0;
-    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
+import { blankAnswer, grade, minGapSec, patternFromSeed, randomPattern, type Answer } from './quiz';
+import { decodeSeed, encodeSeed, mulberry32, nextSeed } from './seed';
 
 describe('quiz patterns', () => {
   const rng = mulberry32(42);
@@ -83,5 +74,33 @@ describe('grading', () => {
     const at = (hz: number) => grade(p, { ...perfect(), frequencyHz: hz }).find((m) => m.label === 'Frequency')!.correct;
     expect(at(Math.max(...freqs) + 0.25)).toBe(true);
     expect(at(Math.max(...freqs) + 0.5)).toBe(false);
+  });
+});
+
+describe('quiz seeds', () => {
+  const seeds = [0, 1, 42, 0x7fffffff, 0xffffffff, 3_141_592_653];
+
+  it('round-trip through a short opaque code', () => {
+    for (const s of seeds) {
+      const code = encodeSeed(s);
+      expect(code).toMatch(/^a[0-9A-Za-z]{6}$/);
+      expect(decodeSeed(code)).toBe(s);
+    }
+  });
+
+  it('reject codes that are not for this generator', () => {
+    for (const bad of ['', 'quiz', 'a12345', 'a1234567', 'b000000', 'a00000!', 'azzzzzz']) expect(decodeSeed(bad)).toBeNull();
+  });
+
+  it('give the same pattern for the same seed', () => {
+    for (const s of seeds) expect(patternFromSeed(s)).toEqual(patternFromSeed(s));
+  });
+
+  it('step to a fixed next seed that gives a different pattern', () => {
+    expect(nextSeed(42)).toBe(nextSeed(42));
+    const chain = [42];
+    for (let i = 0; i < 20; i++) chain.push(nextSeed(chain[i]));
+    expect(new Set(chain).size).toBe(chain.length);
+    expect(patternFromSeed(chain[1])).not.toEqual(patternFromSeed(chain[0]));
   });
 });
