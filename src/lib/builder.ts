@@ -6,6 +6,9 @@ import type { Location, Pattern, PatternType, Plus, Segment } from './acns/types
 
 export type Shape = 'static' | 'fluctuating' | 'evolving';
 
+/** The run lengths the builder offers, in seconds. */
+export const DURATIONS = [8, 15, 60, 300, 900, 3600];
+
 export interface BuilderSettings {
   location: Location;
   type: PatternType;

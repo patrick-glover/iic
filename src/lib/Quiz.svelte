@@ -6,17 +6,22 @@
   import type { DurationCategory } from './acns/timing';
   import type { Location, PatternType, Prevalence } from './acns/types';
   import { categoryLabel } from './labels';
-  import { blankAnswer, grade, patternFromSeed, type QuizCategory } from './quiz';
-  import { decodeSeed, encodeSeed, nextSeed, randomSeed } from './seed';
+  import { blankAnswer, grade, nextCode, patternFromCode, type QuizCategory } from './quiz';
+  import { randomSeed } from './seed';
+  import { encodeSeed } from './share';
+  import ShareLink from './ShareLink.svelte';
   import Trace from './Trace.svelte';
   import Why from './Why.svelte';
 
-  // The pattern comes from a seed kept in the URL (#quiz/<code>), so a copied
-  // link opens the same pattern, and Next leads everyone to the same one after.
-  const seedFromHash = () => decodeSeed(location.hash.replace(/^#quiz\/?/, ''));
-  let seed = $state(seedFromHash() ?? randomSeed());
-  const code = $derived(encodeSeed(seed));
-  const pattern = $derived(patternFromSeed(seed));
+  // The pattern comes from a code kept in the URL (#quiz/<code>): a random
+  // seed, or a pattern made in the composer. A copied link opens the same
+  // pattern, and Next leads everyone to the same one after.
+  const codeFromHash = () => {
+    const c = location.hash.replace(/^#quiz\/?/, '');
+    return patternFromCode(c) ? c : null;
+  };
+  let code = $state(codeFromHash() ?? encodeSeed(randomSeed()));
+  const pattern = $derived(patternFromCode(code)!);
   $effect(() => history.replaceState(null, '', `#quiz/${code}`));
 
   let answer = $state(blankAnswer());
@@ -57,31 +62,19 @@
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  function load(s: number) {
-    seed = s;
+  function load(c: string) {
+    code = c;
     answer = blankAnswer();
     checked = false;
   }
 
-  const next = () => load(nextSeed(seed));
+  const next = () => load(nextCode(code));
 
   // A quiz link pasted into this tab.
   function onHashChange() {
-    const s = seedFromHash();
-    if (s === null) history.replaceState(null, '', `#quiz/${code}`);
-    else if (s !== seed) load(s);
-  }
-
-  let shared = $state('');
-  async function share() {
-    const url = `${location.origin}${location.pathname}#quiz/${code}`;
-    try {
-      await navigator.clipboard.writeText(url);
-      shared = 'Link copied';
-    } catch {
-      shared = url;
-    }
-    setTimeout(() => (shared = ''), 2500);
+    const c = codeFromHash();
+    if (c === null) history.replaceState(null, '', `#quiz/${code}`);
+    else if (c !== code) load(c);
   }
 
   // Drop plus subtypes and modifiers the chosen type can't have, as the builder does.
@@ -113,10 +106,7 @@
         <p class="why">Page through the run and read the hour strip, then name every part and classify it.</p>
       </div>
     {/if}
-    <div class="share">
-      <button type="button" onclick={share} title="Copy a link to this pattern">Share <code>{code}</code></button>
-      {#if shared}<output>{shared}</output>{/if}
-    </div>
+    <ShareLink {code} label="Share" />
   </section>
 
   {#if checked}
@@ -153,7 +143,7 @@
       </fieldset>
 
       <fieldset disabled={checked}>
-        <legend>Location <span class="hint">main term 1</span></legend>
+        <legend>Location</legend>
         <div class="seg">
           {#each locations as value}
             <label><input type="radio" bind:group={answer.location} {value} /><span>{value}</span></label>
@@ -162,7 +152,7 @@
       </fieldset>
 
       <fieldset disabled={checked}>
-        <legend>Type <span class="hint">main term 2</span></legend>
+        <legend>Type</legend>
         <div class="seg">
           {#each types as value}
             <label>
@@ -235,7 +225,7 @@
     </form>
 
     <div class="output">
-      {#key seed}
+      {#key code}
         <Trace {pattern} blind={!checked} />
       {/key}
 
@@ -267,39 +257,6 @@
   .primary:focus-visible {
     outline: 2px solid var(--accent);
     outline-offset: 2px;
-  }
-  .share {
-    margin-left: auto;
-    flex: 0 0 auto;
-    display: grid;
-    justify-items: end;
-    gap: 0.2rem;
-  }
-  .share button {
-    font: inherit;
-    font-size: 0.85rem;
-    padding: 0.35rem 0.7rem;
-    border-radius: 8px;
-    border: 1px solid var(--line);
-    background: var(--panel);
-    color: var(--fg);
-    cursor: pointer;
-    white-space: nowrap;
-  }
-  .share button:focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: 2px;
-  }
-  .share code {
-    color: var(--muted);
-    font-size: 0.8rem;
-  }
-  .share output {
-    max-width: 16rem;
-    font-size: 0.75rem;
-    color: var(--muted);
-    overflow-wrap: anywhere;
-    user-select: all;
   }
   fieldset:disabled {
     opacity: 0.8;

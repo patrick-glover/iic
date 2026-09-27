@@ -10,8 +10,9 @@ import { dynamics, type Dynamic } from './acns/dynamics';
 import { effectivePlus } from './acns/term';
 import { durationCategory, prevalenceCategory, totalDuration, type DurationCategory } from './acns/timing';
 import type { Location, Pattern, PatternType, Plus, Prevalence } from './acns/types';
-import { toPattern, type BuilderSettings, type Shape } from './builder';
-import { mulberry32 } from './seed';
+import { DURATIONS, toPattern, type BuilderSettings, type Shape } from './builder';
+import { mulberry32, nextSeed } from './seed';
+import { codeNumber, decodeSeed, decodeSettings, encodeSeed } from './share';
 
 /** The categories a quiz pattern can land in. */
 export type QuizCategory = Extract<Category, 'ESE' | 'ESz' | 'IIC' | 'RPP'>;
@@ -46,7 +47,6 @@ const pick = <T>(xs: readonly T[], rng: Rng): T => xs[Math.floor(rng() * xs.leng
 const LOCATIONS: Location[] = ['G', 'L', 'BI', 'UI', 'Mf'];
 const TYPES: PatternType[] = ['PD', 'RDA', 'SW'];
 const SHAPES: Shape[] = ['static', 'fluctuating', 'evolving'];
-const DURATIONS = [8, 15, 60, 300, 900, 3600];
 const PREVALENCE_BANDS: [number, number][] = [
   [0, 1],
   [1, 10],
@@ -118,6 +118,17 @@ export function randomPattern(rng: Rng = Math.random): Pattern {
 
 /** The pattern a quiz seed names; the same seed always gives the same pattern. */
 export const patternFromSeed = (seed: number): Pattern => randomPattern(mulberry32(seed));
+
+/** The pattern a quiz code names: a random seed, or a pattern made in the composer. */
+export function patternFromCode(code: string): Pattern | null {
+  const seed = decodeSeed(code);
+  if (seed !== null) return patternFromSeed(seed);
+  const settings = decodeSettings(code);
+  return settings && toPattern(settings);
+}
+
+/** The code after this one, the same for everyone who opened the same link. */
+export const nextCode = (code: string): string => encodeSeed(nextSeed(codeNumber(code) ?? 0));
 
 export interface Mark {
   label: string;

@@ -3,8 +3,10 @@
   import { reportedTerm } from './acns/term';
   import { formatDuration, prevalenceCategory } from './acns/timing';
   import type { Location, PatternType } from './acns/types';
-  import { minPrevalencePct, toPattern, type Shape } from './builder';
+  import { DURATIONS, minPrevalencePct, toPattern, type Shape } from './builder';
   import { categoryLabel } from './labels';
+  import { encodeSettings } from './share';
+  import ShareLink from './ShareLink.svelte';
   import { settings } from './state.svelte';
   import Trace from './Trace.svelte';
   import Why from './Why.svelte';
@@ -26,7 +28,6 @@
     ['SW', 'Spike-and-wave'],
   ];
   const shapes: Shape[] = ['static', 'fluctuating', 'evolving'];
-  const durations = [8, 15, 60, 300, 900, 3600];
 
   // The deciding reasons, without the "and not a seizure" check every IIC carries.
   const summary = $derived(
@@ -64,12 +65,13 @@
       <h2>{name}</h2>
       <p class="why">{summary}</p>
     </div>
+    <ShareLink code={encodeSettings(settings)} label="Share as quiz" />
   </section>
 
   <div class="builder">
     <form class="controls" onsubmit={(e) => e.preventDefault()}>
       <fieldset>
-        <legend>Location <span class="hint">main term 1</span></legend>
+        <legend>Location</legend>
         <div class="seg">
           {#each locations as [value, label]}
             <label title={label}><input type="radio" bind:group={settings.location} {value} /><span>{value}</span></label>
@@ -79,7 +81,7 @@
       </fieldset>
 
       <fieldset>
-        <legend>Type <span class="hint">main term 2</span></legend>
+        <legend>Type</legend>
         <div class="seg">
           {#each types as [value, label]}
             <label title={label}>
@@ -107,7 +109,7 @@
       <fieldset>
         <legend>Duration</legend>
         <div class="seg">
-          {#each durations as value}
+          {#each DURATIONS as value}
             <label><input type="radio" bind:group={settings.durationSec} {value} onchange={onDurationChange} /><span>{formatDuration(value)}</span></label>
           {/each}
         </div>
@@ -123,7 +125,7 @@
       </fieldset>
 
       <fieldset>
-        <legend>Plus <span class="hint">more ictal-appearing</span></legend>
+        <legend>Plus</legend>
         <div class="checks">
           <label class:off={settings.type === 'SW'}>
             <input type="checkbox" bind:checked={settings.plus.F} disabled={settings.type === 'SW'} />

@@ -3,8 +3,10 @@ import { classify } from './acns/classify';
 import { fullTerm, validate } from './acns/term';
 import { durationCategory, prevalenceCategory, totalDuration } from './acns/timing';
 import { runsInHour } from './builder';
-import { blankAnswer, grade, minGapSec, patternFromSeed, randomPattern, type Answer } from './quiz';
-import { decodeSeed, encodeSeed, mulberry32, nextSeed } from './seed';
+import { toPattern } from './builder';
+import { blankAnswer, grade, minGapSec, nextCode, patternFromCode, patternFromSeed, randomPattern, randomSettings, type Answer } from './quiz';
+import { mulberry32, nextSeed } from './seed';
+import { decodeSeed, decodeSettings, encodeSeed, encodeSettings } from './share';
 
 describe('quiz patterns', () => {
   const rng = mulberry32(42);
@@ -102,5 +104,56 @@ describe('quiz seeds', () => {
     for (let i = 0; i < 20; i++) chain.push(nextSeed(chain[i]));
     expect(new Set(chain).size).toBe(chain.length);
     expect(patternFromSeed(chain[1])).not.toEqual(patternFromSeed(chain[0]));
+  });
+});
+
+describe('composer quiz codes', () => {
+  const rng = mulberry32(99);
+  const made = Array.from({ length: 2000 }, () => {
+    const s = randomSettings(rng);
+    return { ...s, prevalencePct: Math.round(s.prevalencePct), stimulusInduced: rng() < 0.5 };
+  });
+
+  it('round-trip every setting the composer can make', () => {
+    for (const s of made) {
+      const code = encodeSettings(s);
+      expect(code).toMatch(/^c[0-9A-Za-z]{6}$/);
+      expect(decodeSettings(code)).toEqual(s);
+    }
+  });
+
+  it('open the composed pattern in the quiz', () => {
+    for (const s of made.slice(0, 50)) expect(patternFromCode(encodeSettings(s))).toEqual(toPattern(s));
+  });
+
+  it("don't read like the settings: one step in frequency changes most of the code", () => {
+    const diffs = made.slice(0, 200).map((s) => {
+      const a = encodeSettings(s);
+      const b = encodeSettings({ ...s, frequencyHz: s.frequencyHz === 4 ? 3.75 : s.frequencyHz + 0.25 });
+      return [...a].filter((c, i) => c !== b[i]).length;
+    });
+    expect(diffs.reduce((t, d) => t + d, 0) / diffs.length).toBeGreaterThan(4);
+  });
+
+  it('reject seed codes, garbage, and most random c-codes', () => {
+    expect(decodeSettings(encodeSeed(42))).toBeNull();
+    expect(decodeSettings('c!!!!!!')).toBeNull();
+    const r = mulberry32(5);
+    let accepted = 0;
+    for (let i = 0; i < 1000; i++) if (decodeSettings('c' + encodeSeed(Math.floor(r() * 2 ** 32)).slice(1))) accepted++;
+    expect(accepted).toBeLessThan(50);
+  });
+
+  it('lead on to the same next pattern for everyone', () => {
+    const c = encodeSettings(made[0]);
+    expect(nextCode(c)).toBe(nextCode(c));
+    expect(nextCode(c)).toMatch(/^a/);
+  });
+});
+
+describe('seed codes already shared', () => {
+  it('keep their meaning', () => {
+    expect(decodeSeed('a0000G8')).toBe(1000);
+    expect(nextCode('a0000G8')).toBe(encodeSeed(nextSeed(1000)));
   });
 });
